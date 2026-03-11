@@ -11,8 +11,8 @@ function reportError(e) {
 
         // 1. GLOBAL NAMESPACE
         window.SMA = {};
-        window.SMA.ID_PREFIX = "sumagura_v426_"; 
-        window.SMA.VERSION = "v426";
+        window.SMA.ID_PREFIX = "sumagura_v430_"; 
+        window.SMA.VERSION = "v430";
         window.SMA.GRAVITY = 0.40; window.SMA.MAX_FALL_SPEED = 9.0;
         window.SMA.FRICTION = 0.82; window.SMA.KB_FRICTION = 0.95;
         window.SMA.SPEED = 1.1; window.SMA.JUMP_FORCE = -10.0;
@@ -1379,21 +1379,25 @@ function reportError(e) {
                     // Radius adjusted to half (50 -> 25). Scale with charge.
                     // v378: Max speed 1.5x on charge (logic in handleAttackFrame)
                     // v379: Max speed 1.75x on charge (logic updated in handleAttackFrame)
-                    SIDE:    { type:'shot', spawnFrame: 10, dmg: 12, kb: 3.0, scale: 0.1, speed: 3.5, radius: 25, frames: 25, lag: 35, stun: 10 },
+                    // spawnFrame 10 -> 12
+                    SIDE:    { type:'shot', spawnFrame: 12, dmg: 12, kb: 3.0, scale: 0.1, speed: 3.5, radius: 25, frames: 25, lag: 35, stun: 10 },
                     UP:      { dmg: 10, kb: 1.6, scale: 0.1, angle: -90, frames: 25, lag: 20, stun: 5 }, 
                     // Radius adjusted 15 -> 10 (v370). Speed adjusted 9.5 -> 8.5 (0.75x of NA 11.34 is 8.5)
                     // v373: lag 15 -> 18
-                    DOWN:    { type:'fire_shot', spawnFrame: 8, dmg: 8, kb: 1.5, scale: 0.08, angle: -45, frames: 25, lag: 18, stun: 5, radius: 10 },
+                    // spawnFrame 8 -> 10
+                    DOWN:    { type:'fire_shot', spawnFrame: 10, dmg: 8, kb: 1.5, scale: 0.08, angle: -45, frames: 25, lag: 18, stun: 5, radius: 10 },
                     // AIR NA Buffed 2.6->3.0
                     // v377: frames 24 -> 21
                     // v376: lag 4 -> 0
                     AIR_NEUTRAL: { type:'shot', spawnFrame: 5, dmg: 2, kb: 3.0, scale: 0, speed: 11.34, radius: 10, frames: 21, lag: 0, stun: 2, hitstun: 15 },
                     // v378: Max speed 1.5x on charge
                     // v379: Max speed 1.75x on charge
-                    AIR_SIDE:{ type:'shot', spawnFrame: 10, dmg: 12, kb: 3.0, scale: 0.1, speed: 3.5, radius: 25, frames: 25, lag: 35, stun: 10 },
+                    // spawnFrame 10 -> 12
+                    AIR_SIDE:{ type:'shot', spawnFrame: 12, dmg: 12, kb: 3.0, scale: 0.1, speed: 3.5, radius: 25, frames: 25, lag: 35, stun: 10 },
                     // Radius adjusted 15 -> 10 (v370). Speed adjusted.
                     // v373: lag 15 -> 18
-                    AIR_DOWN:{ type:'fire_shot', spawnFrame: 8, dmg: 8, kb: 1.5, scale: 0.08, angle: -45, frames: 25, lag: 18, stun: 5, radius: 10 },
+                    // spawnFrame 8 -> 10
+                    AIR_DOWN:{ type:'fire_shot', spawnFrame: 10, dmg: 8, kb: 1.5, scale: 0.08, angle: -45, frames: 25, lag: 18, stun: 5, radius: 10 },
                     LEDGE_ATK: { dmg: 8, kb: 12.0, scale: 0.01, angle: -45, frames: 30, lag: 10, stun: 10 }
                 },
                 throws: {
@@ -1590,7 +1594,27 @@ function reportError(e) {
                 } // mirror存在チェック
             }
             if (this.isGrounded) { this.hasAirDodged = false; this.hasUpSpecial = false; }
+            var preGrounded = this.isGrounded;
             this.checkPlatforms(inputKeys); this.checkLedgeGrab(); this.checkSolids(); this.checkBounds();
+            
+            // 空中N着地硬直 (sword, brawler, hammer, mirror)
+            if (!preGrounded && this.isGrounded) {
+                if (this.actionState === 'ATTACK' && this.currentAttackType === 'AIR_NEUTRAL') {
+                    if (this.charId === 'sword' || this.charId === 'brawler' || this.charId === 'mirror') {
+                        this.actionState = 'LAG';
+                        this.stateTimer = 5; // 5F landing lag
+                        this.currentAttack = null;
+                        this.hitbox.active = false;
+                        this.rotation = 0;
+                    } else if (this.charId === 'hammer') {
+                        this.actionState = 'LAG';
+                        this.stateTimer = 9; // 9F landing lag
+                        this.currentAttack = null;
+                        this.hitbox.active = false;
+                        this.rotation = 0;
+                    }
+                }
+            }
         };
         window.SMA.Fighter.prototype.serialize = function() { return { x: this.x, y: this.y, vx: this.vx, vy: this.vy, state: this.actionState, timer: this.stateTimer, atkType: this.currentAttackType, grounded: this.isGrounded, pct: this.percent, st: this.stocks, face: this.facingRight, chg: this.chargePower, sh: this.shieldHP, inv: this.invincible, grInv: this.grabInvincible, mirror: this.mirror, mirrorClone: this.mirrorClone, mirrorCooldown: this.mirrorCooldown, mirrorPlaceRange: this.mirrorPlaceRange, hitboxActive: this.hitbox.active, hitboxX: this.hitbox.x, hitboxY: this.hitbox.y, hitboxW: this.hitbox.w, hitboxH: this.hitbox.h }; };
         window.SMA.Fighter.prototype.deserialize = function(data) { var S=window.SMA; if(!data) return; this.x = data.x; this.y = data.y; this.vx = data.vx; this.vy = data.vy; this.actionState = data.state; this.stateTimer = data.timer; this.isGrounded = data.grounded; this.currentAttackType = data.atkType; if (this.currentAttackType) { var set = S.CHAR_DATA[this.charId]; if(set.attacks[this.currentAttackType]) this.currentAttack = set.attacks[this.currentAttackType]; else if(set.throws[this.currentAttackType]) this.currentAttack = set.throws[this.currentAttackType]; } else this.currentAttack = null; this.percent = data.pct; this.stocks = data.st; this.facingRight = data.face; this.chargePower = data.chg; this.shieldHP = data.sh; this.invincible = data.inv; this.grabInvincible = data.grInv || 0; this.mirror = data.mirror || null; this.mirrorClone = data.mirrorClone || null; this.mirrorCooldown = data.mirrorCooldown || 0; this.mirrorPlaceRange = data.mirrorPlaceRange || 0; if (data.hitboxActive !== undefined) { this.hitbox.active = data.hitboxActive; this.hitbox.x = data.hitboxX; this.hitbox.y = data.hitboxY; this.hitbox.w = data.hitboxW; this.hitbox.h = data.hitboxH; } };
@@ -2046,7 +2070,25 @@ function reportError(e) {
                             this.hitbox.y = this.y - 70; 
                         } else { this.hitbox.active = false; }
                         return;
-                    } else { this.hitbox.w = 80 * scale; this.hitbox.h = 80 * scale; this.hitbox.x = this.x + (this.facingRight ? -10 : -40); this.hitbox.y = this.y - 40; } } else if (this.currentAttackType === 'SIDE') { this.hitbox.w = 80 * scale; this.hitbox.h = 70 * scale; this.hitbox.x = this.x + (this.facingRight ? 20 : -20 - this.hitbox.w) + this.w/2; this.hitbox.y = this.y - 10; } else if (this.currentAttackType === 'NEUTRAL') { this.hitbox.w = 60 * scale; this.hitbox.h = 30 * scale; this.hitbox.x = this.x + (this.facingRight ? 25 : -25 - this.hitbox.w) + this.w/2; this.hitbox.y = this.y + 25; } else if ((this.currentAttackType === 'DOWN' || this.currentAttackType === 'AIR_DOWN') && this.charId === 'mage') { if(this.charId === 'mage') { } else { this.hitbox.w = 80 * scale; this.hitbox.h = 30 * scale; this.hitbox.x = this.x + (this.facingRight ? -10 : -40); this.hitbox.y = this.y + 40; } } else if(this.currentAttackType === 'NEUTRAL' && this.charId === 'brawler') { this.hitbox.w = 40; this.hitbox.h = 30; this.hitbox.x = this.x + (this.facingRight ? 25 : -65); this.hitbox.y = this.y + 25; } else if (this.charId === 'hammer' && this.currentAttackType === 'NEUTRAL') {
+                    } else { this.hitbox.w = 80 * scale; this.hitbox.h = 80 * scale; this.hitbox.x = this.x + (this.facingRight ? -10 : -40); this.hitbox.y = this.y - 40; } } else if (this.currentAttackType === 'SIDE') { 
+                        this.hitbox.w = 80 * scale; this.hitbox.h = 70 * scale; 
+                        if (this.charId === 'sword') {
+                            this.hitbox.w = 95 * scale;
+                            this.hitbox.x = this.x + (this.facingRight ? 5 : -5 - this.hitbox.w) + this.w/2;
+                        } else {
+                            this.hitbox.x = this.x + (this.facingRight ? 20 : -20 - this.hitbox.w) + this.w/2; 
+                        }
+                        this.hitbox.y = this.y - 10; 
+                    } else if (this.currentAttackType === 'NEUTRAL') { 
+                        this.hitbox.w = 60 * scale; this.hitbox.h = 30 * scale; 
+                        if (this.charId === 'sword') {
+                            this.hitbox.w = 80 * scale;
+                            this.hitbox.x = this.x + (this.facingRight ? 5 : -5 - this.hitbox.w) + this.w/2;
+                        } else {
+                            this.hitbox.x = this.x + (this.facingRight ? 25 : -25 - this.hitbox.w) + this.w/2; 
+                        }
+                        this.hitbox.y = this.y + 25; 
+                    } else if ((this.currentAttackType === 'DOWN' || this.currentAttackType === 'AIR_DOWN') && this.charId === 'mage') { if(this.charId === 'mage') { } else { this.hitbox.w = 80 * scale; this.hitbox.h = 30 * scale; this.hitbox.x = this.x + (this.facingRight ? -10 : -40); this.hitbox.y = this.y + 40; } } else if(this.currentAttackType === 'NEUTRAL' && this.charId === 'brawler') { this.hitbox.w = 40; this.hitbox.h = 30; this.hitbox.x = this.x + (this.facingRight ? 25 : -65); this.hitbox.y = this.y + 25; } else if (this.charId === 'hammer' && this.currentAttackType === 'NEUTRAL') {
                         // Hammer Ground NA Hitbox - 15-21 (SWING PHASE)
                         if (this.stateTimer >= 15 && this.stateTimer <= 21) { 
                             this.hitbox.active = true; 
@@ -2095,6 +2137,11 @@ function reportError(e) {
                         this.hitbox.h = 80;
                         this.hitbox.x = this.x + (this.w - this.hitbox.w)/2; // Center horizontally
                         this.hitbox.y = this.y + 40; // Start from legs/knees and go down
+                    } else if (this.currentAttackType === 'AIR_NEUTRAL' && this.charId === 'sword') {
+                        this.hitbox.w = 90 * scale;
+                        this.hitbox.h = 90 * scale;
+                        this.hitbox.x = this.x + this.w/2 - this.hitbox.w/2;
+                        this.hitbox.y = this.y + this.h/2 - this.hitbox.h/2;
                     } else { this.hitbox.x = this.x + (this.facingRight ? 20 : -20 - this.hitbox.w) + this.w/2; this.hitbox.y = this.y + 20; } } else { this.hitbox.active = false; } if (this.stateTimer >= atk.frames) { 
                         this.actionState = 'LAG'; this.stateTimer = atk.lag; this.chargePower = 1.0; this.hitbox.active = false; 
                         this.currentAttack = null; // FORCE CLEAR for safety

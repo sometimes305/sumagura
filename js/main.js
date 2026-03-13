@@ -934,7 +934,7 @@ function reportError(e) {
                 window.SMA.players.forEach(function(p) { try { if(p) p.draw(window.SMA.ctx); } catch(e){} }); 
                 // 鏡オブジェクトと鏡像の描画
                 try {
-                    [window.SMA.pOne, window.SMA.pTwo].forEach(function(fighter) {
+                    window.SMA.players.forEach(function(fighter) {
                         if (!fighter || fighter.charId !== 'mirror') return;
                         // 鏡設置中: プレビュー表示
                         if (!fighter.mirror && fighter.actionState === 'ATTACK' && fighter.currentAttack && fighter.currentAttack.type === 'mirror_place') {
@@ -1197,8 +1197,8 @@ function reportError(e) {
                 if (data.dmg) vic.percent += data.dmg * p * 0.5;
                 var atkScale = (data.scale !== undefined) ? data.scale : 0.1;
                 var kbMult = window.SMA.CHAR_DATA[vic.charId].kbMult || 1.0;
-                var kbValue = data.kb * 4.0 * 1.2;
-                var kb = (kbValue * p + (Math.pow(vic.percent, 1.2) * atkScale * p * 0.75)) * kbMult;
+                // バースト力を本体の 1.5 倍に調整（0.7 -> 1.5）
+                var kb = (data.kb * p + (Math.pow(vic.percent, 1.2) * atkScale * p * 0.5)) * kbMult * 1.5;
                 var r = data.angle * (Math.PI / 180);
                 // 鏡像の向きで吹っ飛ばし方向を決定
                 var cloneFR = atk.mirrorClone.facingRight;
@@ -1284,9 +1284,6 @@ function reportError(e) {
                 var pData = d['p' + (si+1)];
                 if(pData) window.SMA.players[si].deserialize(pData);
             }
-            // 後方互換: p1/p2が直接来た場合
-            if (d.p1 && window.SMA.pOne) window.SMA.pOne.deserialize(d.p1); 
-            if (d.p2 && window.SMA.pTwo) window.SMA.pTwo.deserialize(d.p2); 
             if(d.projs) window.SMA.projectiles = d.projs; 
             if(d.events) { d.events.forEach(function(e) { if(e.type === 'snd') window.SMA.playSound(e.key); if(e.type === 'part') window.SMA.createParticles(e.x, e.y, e.n, e.c); if(e.type === 'comet') window.SMA.triggerComet(e.x, e.y, e.dir, e.c); }); } 
             window.SMA.updateHud(); 
@@ -1662,27 +1659,31 @@ function reportError(e) {
             // *** 鏡キャラ攻撃処理 ***
             if (atk.type === 'mirror_place') {
                 if (this.stateTimer === 1) {
-                    if (this.mirror) {
-                        // 入れ替わり: 本体と鏡像の位置を交換
+                    if (this.mirror && !this.mirror.swapped) {
+                        // 入れ替わり: 本体と鏡像の位置を交換（1回のみ）
                         var oldX = this.x; var oldY = this.y;
                         if (this.mirrorClone) {
                             this.x = this.mirrorClone.x; this.y = this.mirrorClone.y;
                             this.facingRight = !this.facingRight;
                         }
-                        // 鏡を維持するため、mirror = null にしない。
-                        // 位置交換後は18フレームの硬直（LAG）があるため、連続連打はある程度制限されるが、鏡は残り続ける。
+                        this.mirror.swapped = true; // 交換済みフラグを立てる
                         S.createParticles(oldX + this.w/2, oldY + this.h/2, 15, '#81ecec');
                         S.createParticles(this.x + this.w/2, this.y + this.h/2, 15, '#81ecec');
                         S.playSound('magic');
                         this.actionState = 'LAG'; this.stateTimer = 18;
                         this.currentAttack = null; this.chargePower = 1.0; return;
+                    } else if (this.mirror && this.mirror.swapped) {
+                        // 既に入れ替わり済みの場合は何もしない（鏡が消えるまで待機）
+                        this.actionState = 'LAG'; this.stateTimer = 18;
+                        this.currentAttack = null; this.chargePower = 1.0; return;
                     } else {
-                        // クールタイム中は設置不可 → すぐLAGに移行
+                        // 鏡が無い場合は新しい鏡を設置する
                         if (this.mirrorCooldown > 0) {
+                            // クールタイム中は設置不可
                             this.actionState = 'LAG'; this.stateTimer = 8;
                             this.currentAttack = null; this.chargePower = 1.0; return;
                         }
-                        // 鏡設置開始: ちょん押し=60px（横A間合い程度）
+                        // 鏡設置開始: ちょん押し=60px
                         this.mirrorPlaceRange = 60;
                     }
                 }
@@ -1706,7 +1707,7 @@ function reportError(e) {
                                 placeY = plat.y; break;
                             }
                         }
-                        this.mirror = { x: placeX, y: placeY, timer: 480 };
+                        this.mirror = { x: placeX, y: placeY, timer: 480, swapped: false };
                         this.mirrorClone = {
                             x: 2 * placeX - (this.x + this.w/2) - this.w/2,
                             y: this.y,
@@ -1730,7 +1731,7 @@ function reportError(e) {
                                 placeY = plat.y; break;
                             }
                         }
-                        this.mirror = { x: placeX, y: placeY, timer: 480 };
+                        this.mirror = { x: placeX, y: placeY, timer: 480, swapped: false };
                         this.mirrorClone = {
                             x: 2 * placeX - (this.x + this.w/2) - this.w/2,
                             y: this.y,

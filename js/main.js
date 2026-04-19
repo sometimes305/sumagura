@@ -2323,6 +2323,37 @@ window.SMA.renderResultWinnerIcon = function (icon) {
         iconEl.innerText = v;
     }
 };
+window.SMA.resolveResultWinnerIcon = function (winRole, text) {
+    if (winRole) {
+        var roleKey = String(winRole).toLowerCase();
+        if (roleKey === 'p1') return (window.SMA.lobbyState && window.SMA.lobbyState.p1Icon) || window.SMA.localPlayerIcon || '';
+        if (roleKey === 'p2') {
+            var p2 = window.SMA.connections && window.SMA.connections.find(function (x) { return x.role === 'p2'; });
+            return (p2 && p2.icon) || (window.SMA.lobbyState && window.SMA.lobbyState.p2Icon) || '';
+        }
+        if (roleKey === 'p3') {
+            var p3 = window.SMA.connections && window.SMA.connections.find(function (x) { return x.role === 'p3'; });
+            return (p3 && p3.icon) || (window.SMA.lobbyState && window.SMA.lobbyState.p3Icon) || '';
+        }
+        if (roleKey === 'p4') {
+            var p4 = window.SMA.connections && window.SMA.connections.find(function (x) { return x.role === 'p4'; });
+            return (p4 && p4.icon) || (window.SMA.lobbyState && window.SMA.lobbyState.p4Icon) || '';
+        }
+    }
+    var t = (text == null) ? '' : String(text);
+    var m = t.match(/^(.*)\s+WINS!?$/i);
+    var winnerName = m ? m[1].trim() : '';
+    if (!winnerName) return '';
+    if (winnerName === '1P') return (window.SMA.lobbyState && window.SMA.lobbyState.p1Icon) || window.SMA.localPlayerIcon || '';
+    var byName = window.SMA.connections && window.SMA.connections.find(function (x) { return x && x.name === winnerName; });
+    if (byName && byName.icon) return byName.icon;
+    if (window.SMA.lobbyState) {
+        if (window.SMA.lobbyState.p2 === winnerName) return window.SMA.lobbyState.p2Icon || '';
+        if (window.SMA.lobbyState.p3 === winnerName) return window.SMA.lobbyState.p3Icon || '';
+        if (window.SMA.lobbyState.p4 === winnerName) return window.SMA.lobbyState.p4Icon || '';
+    }
+    return '';
+};
 window.SMA.showGameOverResult = function (text, icon) {
     var t = document.getElementById('result-text');
     if (t) t.innerText = text || 'GAME OVER';
@@ -2361,7 +2392,11 @@ window.SMA.checkGameSet = function () {
         if (btnRematch) btnRematch.style.display = (window.SMA.isOnline && window.SMA.isHost) ? 'block' : 'none';
         window.SMA.playSound('win');
         window.parent.postMessage({ type: 'gameOver', winner: win, winnerIcon: winIcon }, '*');
-        if (window.SMA.isOnline && window.SMA.isHost) window.SMA.connections.forEach(function (c) { c.conn.send({ type: 'sync', gState: 'GAMEOVER', win: win, winText: resultText, winRole: winRole, winIcon: winIcon }); });
+        if (window.SMA.isOnline && window.SMA.isHost) {
+            var gameOverSync = { type: 'sync', gState: 'GAMEOVER', win: win, winText: resultText, winRole: winRole, winIcon: winIcon };
+            window.SMA.connections.forEach(function (c) { if (c && c.conn && c.conn.open) c.conn.send(gameOverSync); });
+            if (window.SMA.isGravity) window.SMA.sendGravitySync(gameOverSync);
+        }
     }
 };
 window.SMA.updateHud = function () {
@@ -2439,7 +2474,8 @@ window.SMA.applySync = function (d) {
     window.SMA.updateHud();
     if (window.SMA.gameState === 'GAMEOVER') {
         var txt = d.winText || (d.win ? (String(d.win).indexOf('WINS!') !== -1 ? d.win : (d.win + ' WINS!')) : 'GAME OVER');
-        window.SMA.showGameOverResult(txt, d.winIcon || '');
+        var icon = d.winIcon || window.SMA.resolveResultWinnerIcon(d.winRole, txt);
+        window.SMA.showGameOverResult(txt, icon);
     }
 };
 // rematch受信処理（ゲスト側）
@@ -2622,14 +2658,14 @@ window.SMA.CHAR_DATA = {
         maxJumps: 3,
         attacks: {
             // NA: 光の弓矢を前方に射出（射程750px = WORLD_W/2）。チャージで3本（直進/斜め上/斜め下）
-            NEUTRAL: { type: 'arrow_shot', spawnFrame: 6, dmg: 3, kb: 0.9, scale: 0.06, speed: 8, radius: 8, frames: 18, lag: 12, stun: 3, range: 750, color: '#ffe066' },
+            NEUTRAL: { type: 'arrow_shot', spawnFrame: 6, dmg: 3, kb: 0.75, scale: 0.06, speed: 8, radius: 8, frames: 18, lag: 12, stun: 3, range: 750, color: '#ffe066' },
             // 横A: 羽ばたき攻撃。空中時は自己後方ノックバック
             SIDE: { type: 'wing_flap', dmg: 13, kb: 3, scale: 0.1, angle: -25, frames: 22, lag: 18, stun: 8, color: '#fff' },
             // 上A: 飛翔攻撃（攻撃判定付き上昇）
             UP: { type: 'wing_rise', dmg: 11, kb: 3, scale: 0.1, angle: -85, frames: 30, lag: 20, stun: 6, color: '#ffe066', limit: true },
             // 下A: 円形衝撃波（固定吹っ飛ばし、撃墜不可）。空中で滞空
             DOWN: { type: 'shockwave', dmg: 6, kb: 8.0, scale: 0, angle: -45, frames: 35, lag: 35, stun: 10, shockRadius: 140, color: '#ffe066' },
-            AIR_NEUTRAL: { type: 'arrow_shot', spawnFrame: 6, dmg: 3, kb: 0.9, scale: 0.06, speed: 8, radius: 8, frames: 18, lag: 12, stun: 3, range: 750, color: '#ffe066' },
+            AIR_NEUTRAL: { type: 'arrow_shot', spawnFrame: 6, dmg: 3, kb: 0.75, scale: 0.06, speed: 8, radius: 8, frames: 18, lag: 12, stun: 3, range: 750, color: '#ffe066' },
             AIR_SIDE: { type: 'wing_flap', dmg: 12, kb: 3, scale: 0.1, angle: -30, frames: 22, lag: 18, stun: 7, color: '#fff', airKnockback: true },
             AIR_UP: { type: 'wing_rise', dmg: 11, kb: 3, scale: 0.1, angle: -90, frames: 28, lag: 18, stun: 5, color: '#ffe066', limit: true },
             AIR_DOWN: { type: 'shockwave', dmg: 6, kb: 8.0, scale: 0, angle: -45, frames: 35, lag: 35, stun: 10, shockRadius: 140, color: '#ffe066', hover: true },

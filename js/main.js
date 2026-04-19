@@ -2785,7 +2785,12 @@ window.SMA.Fighter.prototype.startCharge = function () {
     if (this.actionState === 'IDLE' || this.actionState === 'CHARGE') {
         // 鏡キャラ: ↓入力中なら即座にmirror_placeを発動（長押し距離調整のため）
         if (this.charId === 'mirror') {
-            var keys = (this.isP2 ? window.SMA.remoteKeys : window.SMA.myKeys) || {};
+            var keys = null;
+            if (this.playerRole && this.playerRole !== 'p1') {
+                keys = (window.SMA.remoteKeysMap && window.SMA.remoteKeysMap[this.playerRole]) || window.SMA.remoteKeys || {};
+            } else {
+                keys = window.SMA.myKeys || {};
+            }
             if (keys.down) {
                 var S = window.SMA;
                 var typeStr = this.isGrounded ? 'DOWN' : 'AIR_DOWN';
@@ -2967,7 +2972,12 @@ window.SMA.Fighter.prototype.handleAttackFrame = function () {
         // 鏡がまだ無い場合: 長押しでスライド
         if (!this.mirror && this.stateTimer > 1) {
             // Aボタンが押されている間、設置距離が増加（最大300px）
-            var keys = (this.isP2 ? S.remoteKeys : S.myKeys) || {};
+            var keys = null;
+            if (this.playerRole && this.playerRole !== 'p1') {
+                keys = (S.remoteKeysMap && S.remoteKeysMap[this.playerRole]) || S.remoteKeys || {};
+            } else {
+                keys = S.myKeys || {};
+            }
             if (keys.attack) {
                 this.mirrorPlaceRange += 3.83;
                 if (this.mirrorPlaceRange > 750) this.mirrorPlaceRange = 750;

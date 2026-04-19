@@ -2306,6 +2306,30 @@ window.SMA.checkMirrorHit = function (atk, vic) {
         window.SMA.playSound('hit');
     }
 };
+window.SMA.renderResultWinnerIcon = function (icon) {
+    var iconEl = document.getElementById('result-winner-icon');
+    if (!iconEl) return;
+    var v = (icon == null) ? '' : String(icon).trim();
+    iconEl.style.backgroundImage = 'none';
+    if (!v) {
+        iconEl.innerText = '🏆';
+        return;
+    }
+    var isImg = /^(https?:\/\/|data:image\/|blob:|\/)/i.test(v);
+    if (isImg) {
+        iconEl.innerText = '';
+        iconEl.style.backgroundImage = 'url(' + v + ')';
+    } else {
+        iconEl.innerText = v;
+    }
+};
+window.SMA.showGameOverResult = function (text, icon) {
+    var t = document.getElementById('result-text');
+    if (t) t.innerText = text || 'GAME OVER';
+    window.SMA.renderResultWinnerIcon(icon);
+    var scr = document.getElementById('game-over-screen');
+    if (scr) scr.classList.remove('hidden');
+};
 window.SMA.checkGameSet = function () {
     // 生存者カウント
     var alive = [];
@@ -2313,23 +2337,31 @@ window.SMA.checkGameSet = function () {
     if (alive.length <= 1) {
         window.SMA.gameRunning = false; window.SMA.gameState = 'GAMEOVER';
         var win = 'CPU';
+        var winRole = 'cpu';
+        var winIcon = '';
         if (alive.length === 1) {
             var idx = alive[0];
-            if (idx === 0) win = window.SMA.isOnline ? '1P' : '1P';
+            if (idx === 0) {
+                win = window.SMA.isOnline ? '1P' : '1P';
+                winRole = 'p1';
+                winIcon = window.SMA.localPlayerIcon || '';
+            }
             else {
                 var role = window.SMA.PLAYER_ROLES[idx];
                 var pObj = window.SMA.connections.find(function (x) { return x.role === role; });
+                winRole = role;
+                winIcon = pObj ? (pObj.icon || '') : '';
                 win = pObj ? pObj.name : (role.toUpperCase());
             }
         }
-        document.getElementById('result-text').innerText = win + ' WINS!';
-        document.getElementById('game-over-screen').classList.remove('hidden');
+        var resultText = win + ' WINS!';
+        window.SMA.showGameOverResult(resultText, winIcon);
         // ホストかつオンラインなら再戦ボタン表示
         var btnRematch = document.getElementById('btn-rematch');
         if (btnRematch) btnRematch.style.display = (window.SMA.isOnline && window.SMA.isHost) ? 'block' : 'none';
         window.SMA.playSound('win');
-        window.parent.postMessage({ type: 'gameOver', winner: win }, '*');
-        if (window.SMA.isOnline && window.SMA.isHost) window.SMA.connections.forEach(function (c) { c.conn.send({ type: 'sync', gState: 'GAMEOVER', win: win }); });
+        window.parent.postMessage({ type: 'gameOver', winner: win, winnerIcon: winIcon }, '*');
+        if (window.SMA.isOnline && window.SMA.isHost) window.SMA.connections.forEach(function (c) { c.conn.send({ type: 'sync', gState: 'GAMEOVER', win: win, winText: resultText, winRole: winRole, winIcon: winIcon }); });
     }
 };
 window.SMA.updateHud = function () {
@@ -2405,7 +2437,10 @@ window.SMA.applySync = function (d) {
     if (d.projs) window.SMA.projectiles = d.projs;
     if (d.events) { d.events.forEach(function (e) { if (e.type === 'snd') window.SMA.playSound(e.key); if (e.type === 'part') window.SMA.createParticles(e.x, e.y, e.n, e.c); if (e.type === 'comet') window.SMA.triggerComet(e.x, e.y, e.dir, e.c); }); }
     window.SMA.updateHud();
-    if (window.SMA.gameState === 'GAMEOVER') { document.getElementById('result-text').innerText = d.win; document.getElementById('game-over-screen').classList.remove('hidden'); }
+    if (window.SMA.gameState === 'GAMEOVER') {
+        var txt = d.winText || (d.win ? (String(d.win).indexOf('WINS!') !== -1 ? d.win : (d.win + ' WINS!')) : 'GAME OVER');
+        window.SMA.showGameOverResult(txt, d.winIcon || '');
+    }
 };
 // rematch受信処理（ゲスト側）
 var origHandleClient = window.SMA.handleClient;

@@ -2354,6 +2354,24 @@ window.SMA.resolveResultWinnerIcon = function (winRole, text) {
     }
     return '';
 };
+window.SMA.getRoleIcon = function (role) {
+    var r = String(role || '').toLowerCase();
+    if (!r) return '';
+    if (r === 'p1') return (window.SMA.lobbyState && window.SMA.lobbyState.p1Icon) || window.SMA.localPlayerIcon || '';
+    if (r === 'p2') {
+        var p2 = window.SMA.connections && window.SMA.connections.find(function (x) { return x.role === 'p2'; });
+        return (p2 && p2.icon) || (window.SMA.lobbyState && window.SMA.lobbyState.p2Icon) || '';
+    }
+    if (r === 'p3') {
+        var p3 = window.SMA.connections && window.SMA.connections.find(function (x) { return x.role === 'p3'; });
+        return (p3 && p3.icon) || (window.SMA.lobbyState && window.SMA.lobbyState.p3Icon) || '';
+    }
+    if (r === 'p4') {
+        var p4 = window.SMA.connections && window.SMA.connections.find(function (x) { return x.role === 'p4'; });
+        return (p4 && p4.icon) || (window.SMA.lobbyState && window.SMA.lobbyState.p4Icon) || '';
+    }
+    return '';
+};
 window.SMA.showGameOverResult = function (text, icon) {
     var t = document.getElementById('result-text');
     if (t) t.innerText = text || 'GAME OVER';
@@ -2373,15 +2391,19 @@ window.SMA.checkGameSet = function () {
         if (alive.length === 1) {
             var idx = alive[0];
             if (idx === 0) {
-                win = window.SMA.isOnline ? '1P' : '1P';
+                if (window.SMA.isOnline) {
+                    win = (window.SMA.lobbyState && window.SMA.lobbyState.p1) || window.SMA.localPlayerName || '1P';
+                } else {
+                    win = window.SMA.localPlayerName || '1P';
+                }
                 winRole = 'p1';
-                winIcon = window.SMA.localPlayerIcon || '';
+                winIcon = window.SMA.getRoleIcon('p1');
             }
             else {
                 var role = window.SMA.PLAYER_ROLES[idx];
                 var pObj = window.SMA.connections.find(function (x) { return x.role === role; });
                 winRole = role;
-                winIcon = pObj ? (pObj.icon || '') : '';
+                winIcon = window.SMA.getRoleIcon(role);
                 win = pObj ? pObj.name : (role.toUpperCase());
             }
         }
@@ -2474,7 +2496,7 @@ window.SMA.applySync = function (d) {
     window.SMA.updateHud();
     if (window.SMA.gameState === 'GAMEOVER') {
         var txt = d.winText || (d.win ? (String(d.win).indexOf('WINS!') !== -1 ? d.win : (d.win + ' WINS!')) : 'GAME OVER');
-        var icon = d.winIcon || window.SMA.resolveResultWinnerIcon(d.winRole, txt);
+        var icon = d.winIcon || window.SMA.getRoleIcon(d.winRole) || window.SMA.resolveResultWinnerIcon(d.winRole, txt);
         window.SMA.showGameOverResult(txt, icon);
     }
 };

@@ -933,7 +933,8 @@ select {
     height: 12px;
     bottom: 24px;
     border-radius: 14px;
-    background: rgba(26, 20, 60, 0.88);
+    background: #4b2f24;
+    border-color: rgba(226, 197, 167, 0.55);
     position: absolute;
 }
 

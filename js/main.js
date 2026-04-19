@@ -2348,11 +2348,27 @@ window.SMA.resolveResultWinnerIcon = function (winRole, text) {
     var byName = window.SMA.connections && window.SMA.connections.find(function (x) { return x && x.name === winnerName; });
     if (byName && byName.icon) return byName.icon;
     if (window.SMA.lobbyState) {
+        if (window.SMA.lobbyState.p1 === winnerName) return window.SMA.lobbyState.p1Icon || window.SMA.localPlayerIcon || '';
         if (window.SMA.lobbyState.p2 === winnerName) return window.SMA.lobbyState.p2Icon || '';
         if (window.SMA.lobbyState.p3 === winnerName) return window.SMA.lobbyState.p3Icon || '';
         if (window.SMA.lobbyState.p4 === winnerName) return window.SMA.lobbyState.p4Icon || '';
     }
     return '';
+};
+window.SMA.inferWinnerRoleFromText = function (text) {
+    var t = (text == null) ? '' : String(text);
+    var m = t.match(/^(.*)\s+WINS!?$/i);
+    var winnerName = m ? m[1].trim() : '';
+    if (!winnerName) return '';
+    if (winnerName === '1P') return 'p1';
+    if (window.SMA.lobbyState) {
+        if (window.SMA.lobbyState.p1 === winnerName) return 'p1';
+        if (window.SMA.lobbyState.p2 === winnerName) return 'p2';
+        if (window.SMA.lobbyState.p3 === winnerName) return 'p3';
+        if (window.SMA.lobbyState.p4 === winnerName) return 'p4';
+    }
+    var byName = window.SMA.connections && window.SMA.connections.find(function (x) { return x && x.name === winnerName; });
+    return byName ? (byName.role || '') : '';
 };
 window.SMA.getRoleIcon = function (role) {
     var r = String(role || '').toLowerCase();
@@ -2513,8 +2529,9 @@ window.SMA.applySync = function (d) {
     window.SMA.updateHud();
     if (window.SMA.gameState === 'GAMEOVER') {
         var txt = d.winText || (d.win ? (String(d.win).indexOf('WINS!') !== -1 ? d.win : (d.win + ' WINS!')) : 'GAME OVER');
+        var resolvedRole = d.winRole || window.SMA.inferWinnerRoleFromText(txt);
         var winnerIndex = window.SMA.getWinnerIndexFromSync(d);
-        var icon = d.winIcon || window.SMA.getHudStyleWinnerIcon(winnerIndex) || window.SMA.getRoleIcon(d.winRole) || window.SMA.resolveResultWinnerIcon(d.winRole, txt);
+        var icon = d.winIcon || window.SMA.getHudStyleWinnerIcon(winnerIndex) || window.SMA.getRoleIcon(resolvedRole) || window.SMA.resolveResultWinnerIcon(resolvedRole, txt);
         window.SMA.showGameOverResult(txt, icon);
     }
 };

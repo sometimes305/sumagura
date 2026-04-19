@@ -52,7 +52,7 @@ window.SMA.p1Stage = 'battlefield'; window.SMA.p2Stage = 'battlefield'; window.S
 window.SMA.p1StageReady = false; window.SMA.p2StageReady = false; window.SMA.p3StageReady = false; window.SMA.p4StageReady = false;
 window.SMA.selectedStage = 'battlefield';
 
-window.SMA.audioCtx = null; window.SMA.soundEnabled = true; window.SMA.audioUnlocked = false; window.SMA.audioUnlockBound = false;
+window.SMA.audioCtx = null; window.SMA.soundEnabled = false; window.SMA.audioUnlocked = false; window.SMA.audioUnlockBound = false;
 window.SMA.angelChargeVisualDelay = 10;
 window.SMA.canvas = null; window.SMA.ctx = null;
 window.SMA.isEditingLayout = false;

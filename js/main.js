@@ -52,7 +52,8 @@ window.SMA.p1Stage = 'battlefield'; window.SMA.p2Stage = 'battlefield'; window.S
 window.SMA.p1StageReady = false; window.SMA.p2StageReady = false; window.SMA.p3StageReady = false; window.SMA.p4StageReady = false;
 window.SMA.selectedStage = 'battlefield';
 
-window.SMA.audioCtx = null; window.SMA.soundEnabled = true;
+window.SMA.audioCtx = null; window.SMA.soundEnabled = true; window.SMA.audioUnlocked = false; window.SMA.audioUnlockBound = false;
+window.SMA.angelChargeVisualDelay = 10;
 window.SMA.canvas = null; window.SMA.ctx = null;
 window.SMA.isEditingLayout = false;
 window.SMA.hasJoined = false;
@@ -633,9 +634,37 @@ window.SMA.drawHammer = function (ctx, x, y, angleDeg, color, headColor) {
     ctx.strokeRect(-15, 35, 30, 20);
     ctx.restore();
 };
-window.SMA.startAudioContext = function () { if (!window.SMA.audioCtx) { var AudioContext = window.AudioContext || window.webkitAudioContext; if (AudioContext) window.SMA.audioCtx = new AudioContext(); } if (window.SMA.audioCtx && window.SMA.audioCtx.state === 'suspended') window.SMA.audioCtx.resume().catch(function () { }); };
+window.SMA.startAudioContext = function () {
+    if (!window.SMA.audioCtx) {
+        var AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) window.SMA.audioCtx = new AudioContext();
+    }
+    if (window.SMA.audioCtx && window.SMA.audioCtx.state === 'suspended') {
+        window.SMA.audioCtx.resume().catch(function () { });
+    }
+    if (window.SMA.audioCtx && window.SMA.audioCtx.state !== 'suspended') {
+        window.SMA.audioUnlocked = true;
+    }
+};
 window.SMA.initSound = window.SMA.startAudioContext;
-window.SMA.playSound = function (type) { if (!window.SMA.soundEnabled) return; if (window.SMA.isHost && window.SMA.isOnline && window.SMA.gameRunning) window.SMA.syncEvents.push({ type: 'snd', key: type }); if (!window.SMA.audioCtx) return; if (window.SMA.audioCtx.state === 'suspended') window.SMA.audioCtx.resume().catch(function () { }); var osc = window.SMA.audioCtx.createOscillator(); var gain = window.SMA.audioCtx.createGain(); osc.connect(gain); gain.connect(window.SMA.audioCtx.destination); var now = window.SMA.audioCtx.currentTime; if (type === 'magic') { osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); } else if (type === 'fire') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.linearRampToValueAtTime(50, now + 0.4); gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4); osc.start(now); osc.stop(now + 0.4); } else if (type === 'spin') { osc.type = 'triangle'; osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(400, now + 0.2); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.2); osc.start(now); osc.stop(now + 0.2); } else if (type === 'hit') { osc.type = 'square'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(40, now + 0.1); gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); } else if (type === 'jump') { osc.type = 'sine'; osc.frequency.setValueAtTime(300, now); osc.frequency.linearRampToValueAtTime(500, now + 0.1); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.15); osc.start(now); osc.stop(now + 0.15); } else if (type === 'sword') { osc.type = 'triangle'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(100, now + 0.1); gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); } else if (type === 'shot') { osc.type = 'square'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(200, now + 0.2); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.2); osc.start(now); osc.stop(now + 0.2); } else if (type === 'special') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(800, now + 0.5); gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.5); osc.start(now); osc.stop(now + 0.5); } else if (type === 'win') { osc.type = 'square'; osc.frequency.setValueAtTime(440, now); osc.frequency.setValueAtTime(554, now + 0.1); osc.frequency.setValueAtTime(659, now + 0.2); gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 1.0); osc.start(now); osc.stop(now + 1.0); } };
+window.SMA.bindAudioUnlock = function () {
+    if (window.SMA.audioUnlockBound) return;
+    window.SMA.audioUnlockBound = true;
+    var done = false;
+    var opts = { capture: true, passive: true };
+    var events = ['touchstart', 'pointerdown', 'mousedown', 'keydown'];
+    var off = function () {
+        events.forEach(function (ev) { document.removeEventListener(ev, unlock, opts); });
+        done = true;
+    };
+    var unlock = function () {
+        if (done) return;
+        window.SMA.startAudioContext();
+        if (window.SMA.audioCtx && window.SMA.audioCtx.state !== 'suspended') off();
+    };
+    events.forEach(function (ev) { document.addEventListener(ev, unlock, opts); });
+};
+window.SMA.playSound = function (type) { if (!window.SMA.soundEnabled) return; if (window.SMA.isHost && window.SMA.isOnline && window.SMA.gameRunning) window.SMA.syncEvents.push({ type: 'snd', key: type }); if (!window.SMA.audioCtx || window.SMA.audioCtx.state === 'suspended') window.SMA.startAudioContext(); if (!window.SMA.audioCtx) return; if (window.SMA.audioCtx.state === 'suspended') window.SMA.audioCtx.resume().catch(function () { }); var osc = window.SMA.audioCtx.createOscillator(); var gain = window.SMA.audioCtx.createGain(); osc.connect(gain); gain.connect(window.SMA.audioCtx.destination); var now = window.SMA.audioCtx.currentTime; if (type === 'magic') { osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); } else if (type === 'fire') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.linearRampToValueAtTime(50, now + 0.4); gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4); osc.start(now); osc.stop(now + 0.4); } else if (type === 'spin') { osc.type = 'triangle'; osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(400, now + 0.2); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.2); osc.start(now); osc.stop(now + 0.2); } else if (type === 'hit') { osc.type = 'square'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(40, now + 0.1); gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); } else if (type === 'jump') { osc.type = 'sine'; osc.frequency.setValueAtTime(300, now); osc.frequency.linearRampToValueAtTime(500, now + 0.1); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.15); osc.start(now); osc.stop(now + 0.15); } else if (type === 'sword') { osc.type = 'triangle'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(100, now + 0.1); gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); } else if (type === 'shot') { osc.type = 'square'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(200, now + 0.2); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.2); osc.start(now); osc.stop(now + 0.2); } else if (type === 'special') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(800, now + 0.5); gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.5); osc.start(now); osc.stop(now + 0.5); } else if (type === 'win') { osc.type = 'square'; osc.frequency.setValueAtTime(440, now); osc.frequency.setValueAtTime(554, now + 0.1); osc.frequency.setValueAtTime(659, now + 0.2); gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 1.0); osc.start(now); osc.stop(now + 1.0); } };
 
 // 3. UI & MENU FUNCTIONS
 window.SMA.setJoinLoading = function (loading) {
@@ -2800,6 +2829,7 @@ window.SMA.Fighter.prototype.update = function (inputKeys, opponent) {
         }
         case 'ATTACK': if (!this.isGrounded) { var moveSpd = S.SPEED * 0.5; var cAtk = S.CHAR_DATA[this.charId] || {}; var airMoveMult = (typeof cAtk.airAttackMoveMult === 'number') ? cAtk.airAttackMoveMult : 1.0; moveSpd *= airMoveMult; if (inputKeys.left) this.vx -= moveSpd; if (inputKeys.right) this.vx += moveSpd; if (this.vx > 5) this.vx = 5; if (this.vx < -5) this.vx = -5; } if (this.currentAttack && (this.currentAttack.type === 'meteor' || this.currentAttack.type === 'beam' || this.currentAttack.type === 'dive' || this.currentAttack.type === 'axe' || this.currentAttack.type === 'stall_fall' || this.currentAttack.type === 'up_rush' || this.currentAttack.type === 'ground_shock')) { this.handleAttackFrame(); this.applyPhysics(); } else if (this.currentAttack && (this.currentAttack.type === 'slide' || this.currentAttack.type === 'lunge' || this.currentAttack.type === 'spin_hammer' || this.currentAttack.type === 'hammer_spin_air' || this.currentAttack.type === 'tornado')) { this.handleAttackFrame(); this.vx *= 0.95; this.vy += S.GRAVITY; this.checkPlatforms(inputKeys); this.x += this.vx; this.y += this.vy; if (this.y > 2000) this.checkBounds(); } else { this.handleAttackFrame(); this.applyPhysics(); } break;
         case 'CHARGE':
+            this.stateTimer++;
             if (inputKeys.left) this.facingRight = false;
             if (inputKeys.right) this.facingRight = true;
             this.vx *= 0.6; this.chargePower += 0.02; if (this.chargePower > 1.7) this.chargePower = 1.7; this.applyPhysics(); break;
@@ -2937,6 +2967,7 @@ window.SMA.Fighter.prototype.startCharge = function () {
             }
         }
         this.actionState = 'CHARGE';
+        this.stateTimer = 0;
         if (this.chargePower === 1.0) this.chargePower = 1.0;
     }
 };
@@ -3774,6 +3805,7 @@ window.SMA.Fighter.prototype.draw = function (ctx) {
                     ctx.strokeStyle = sc; ctx.lineWidth = 3;
                     var isArrowShot = this.actionState === 'ATTACK' && this.currentAttack && this.currentAttack.type === 'arrow_shot';
                     var isCharging = this.actionState === 'CHARGE';
+                    var chargeVisualReady = isCharging && this.stateTimer >= (window.SMA.angelChargeVisualDelay || 10);
                     var isGrabAttempt = this.actionState === 'GRAB_ATTEMPT';
                     var isGrabHold = this.actionState === 'GRABBING' || this.actionState === 'THROWING';
                     if (isGrabAttempt) {
@@ -3792,15 +3824,15 @@ window.SMA.Fighter.prototype.draw = function (ctx) {
                     } else if (isArrowShot || isCharging) {
                         // NA / チャージ: 前方に弓を構えて射る構え
                         // 弓本体（前方に向ける）— 溜め中は白発光
-                        var bowColor = isCharging ? '#fff' : '#c89b3c';
-                        if (isCharging) { ctx.shadowBlur = 12; ctx.shadowColor = '#fff'; }
-                        var bowJx = isCharging ? (Math.random() - 0.5) * 2.5 : 0;
-                        var bowJy = isCharging ? (Math.random() - 0.5) * 2.5 : 0;
+                        var bowColor = chargeVisualReady ? '#fff' : '#c89b3c';
+                        if (chargeVisualReady) { ctx.shadowBlur = 12; ctx.shadowColor = '#fff'; }
+                        var bowJx = chargeVisualReady ? (Math.random() - 0.5) * 2.5 : 0;
+                        var bowJy = chargeVisualReady ? (Math.random() - 0.5) * 2.5 : 0;
                         ctx.strokeStyle = bowColor; ctx.lineWidth = 2.5;
                         ctx.beginPath(); ctx.arc(cx + dir * 20 + bowJx, this.y + 25 + bowJy, 18, dir > 0 ? -1.2 : Math.PI - 1.2, dir > 0 ? 1.2 : Math.PI + 1.2); ctx.stroke();
                         // 弦
-                        var pullBack = isCharging ? Math.min(this.chargePower * 5, 10) : 3;
-                        ctx.strokeStyle = isCharging ? '#fff' : '#ddd'; ctx.lineWidth = isCharging ? 1.5 : 1;
+                        var pullBack = isCharging ? (chargeVisualReady ? Math.min(this.chargePower * 5, 10) : 3) : 3;
+                        ctx.strokeStyle = chargeVisualReady ? '#fff' : '#ddd'; ctx.lineWidth = chargeVisualReady ? 1.5 : 1;
                         ctx.beginPath(); ctx.moveTo(cx + dir * (20 + 18 * Math.cos(-1.2)) + bowJx, this.y + 25 + 18 * Math.sin(-1.2) + bowJy);
                         ctx.lineTo(cx + dir * (20 - pullBack) + bowJx, this.y + 25 + bowJy);
                         ctx.lineTo(cx + dir * (20 + 18 * Math.cos(1.2)) + bowJx, this.y + 25 + 18 * Math.sin(1.2) + bowJy); ctx.stroke();
@@ -4365,6 +4397,7 @@ window.onload = function () {
         } catch (e) { }
     };
     window.SMA.loadSettings();
+    window.SMA.bindAudioUnlock();
 
     // Gravity環境の場合はユーザー情報取得を開始
     window.SMA.initGravity();
@@ -4705,3 +4738,4 @@ window.onload = function () {
         window.SMA.initCanvas();
     });
 };
+

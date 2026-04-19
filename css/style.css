@@ -935,7 +935,7 @@ select {
     border-radius: 2px;
     background: #4b2f24;
     border-color: rgba(226, 197, 167, 0.55);
-    position: relative;
+    position: absolute;
 }
 
 .preview-battlefield .plat.main::after {

@@ -2455,6 +2455,8 @@ window.SMA.Fighter = function (x, y, color, isP2, charId) {
 // 6. CHAR DATA
 window.SMA.CHAR_DATA = {
     sword: {
+        moveMult: 1.0,
+        airAttackMoveMult: 1.0,
         attacks: {
             NEUTRAL: { dmg: 6, kb: 1.6, scale: 0.08, angle: -30, frames: 12, lag: 8, stun: 3, color: '#fff' },
             SIDE: { dmg: 14, kb: 2.4, scale: 0.1, angle: -25, frames: 20, lag: 20, stun: 6, color: '#ffeb3b' },
@@ -2471,6 +2473,8 @@ window.SMA.CHAR_DATA = {
         }
     },
     mage: {
+        moveMult: 0.95,
+        airAttackMoveMult: 0.9,
         attacks: {
             NEUTRAL: { type: 'shot', spawnFrame: 5, dmg: 3, kb: 3.0, scale: 0, speed: 11.34, radius: 10, frames: 21, lag: 0, stun: 2, hitstun: 15 },
             SIDE: { type: 'shot', spawnFrame: 12, dmg: 12, kb: 3.0, scale: 0.1, speed: 3.5, radius: 25, frames: 25, lag: 35, stun: 10 },
@@ -2487,6 +2491,8 @@ window.SMA.CHAR_DATA = {
         }
     },
     brawler: {
+        moveMult: 1.4,
+        airAttackMoveMult: 1.4,
         jumpMult: 1.15,
         kbMult: 1.1,
         attacks: {
@@ -2508,7 +2514,10 @@ window.SMA.CHAR_DATA = {
         }
     },
     spear: {
-        jumpMult: 0.9, kbMult: 0.85, speed: 0.9,
+        moveMult: 0.9,
+        airAttackMoveMult: 0.9,
+        jumpMult: 0.9,
+        kbMult: 0.85,
         attacks: {
             NEUTRAL: { type: 'poke', range: 120, dmg: 5, kb: 1.46, scale: 0.1, angle: -20, frames: 18, lag: 10, color: '#00b894' },
             SIDE: { type: 'boomerang', dmg: 8, kb: 1.17, scale: 0.08, angle: -30, frames: 30, lag: 22, color: '#00b894' }, 
@@ -2526,7 +2535,10 @@ window.SMA.CHAR_DATA = {
         }
     },
     hammer: {
-        kbMult: 0.85, speed: 0.8, jumpMult: 0.9,
+        moveMult: 0.8,
+        airAttackMoveMult: 0.7,
+        kbMult: 0.85,
+        jumpMult: 0.9,
         attacks: {
             NEUTRAL: { dmg: 14, kb: 5.6, scale: 0.15, angle: -45, frames: 45, lag: 10, stun: 15, color: '#b2bec3' },
             SIDE: { type: 'spin_hammer', dmg: 12, kb: 3.5, scale: 0.15, angle: -30, frames: 50, lag: 25, stun: 10, color: '#636e72' },
@@ -2546,6 +2558,8 @@ window.SMA.CHAR_DATA = {
         }
     },
     mirror: {
+        moveMult: 1.15,
+        airAttackMoveMult: 1.1,
         jumpMult: 1.1, speed: 1.05, kbMult: 1.15,
         attacks: {
             NEUTRAL: { type: 'mirror_slash', range: 50, dmg: 4, kb: 1.44, scale: 0.06, angle: -30, frames: 10, lag: 6, stun: 3, color: '#81ecec' },
@@ -2566,7 +2580,11 @@ window.SMA.CHAR_DATA = {
         }
     },
     angel: {
-        jumpMult: 0.85, speed: 1.0, kbMult: 1.2, maxJumps: 3,
+        moveMult: 1.0,
+        airAttackMoveMult: 1.0,
+        jumpMult: 0.85,
+        kbMult: 1.2,
+        maxJumps: 3,
         attacks: {
             // NA: 光の弓矢を前方に射出（射程750px = WORLD_W/2）。チャージで3本（直進/斜め上/斜め下）
             NEUTRAL: { type: 'arrow_shot', spawnFrame: 6, dmg: 3, kb: 0.9, scale: 0.06, speed: 8, radius: 8, frames: 18, lag: 12, stun: 3, range: 750, color: '#ffe066' },
@@ -2575,11 +2593,11 @@ window.SMA.CHAR_DATA = {
             // 上A: 飛翔攻撃（攻撃判定付き上昇）
             UP: { type: 'wing_rise', dmg: 11, kb: 3, scale: 0.1, angle: -85, frames: 30, lag: 20, stun: 6, color: '#ffe066', limit: true },
             // 下A: 円形衝撃波（固定吹っ飛ばし、撃墜不可）。空中で滞空
-            DOWN: { type: 'shockwave', dmg: 8, kb: 8.0, scale: 0, angle: -45, frames: 35, lag: 31, stun: 10, shockRadius: 160, color: '#ffe066' },
-            AIR_NEUTRAL: { type: 'arrow_shot', spawnFrame: 6, dmg: 3, kb: 1.0, scale: 0.06, speed: 10.5, radius: 8, frames: 18, lag: 12, stun: 3, range: 750, color: '#ffe066' },
+            DOWN: { type: 'shockwave', dmg: 6, kb: 8.0, scale: 0, angle: -45, frames: 35, lag: 35, stun: 10, shockRadius: 140, color: '#ffe066' },
+            AIR_NEUTRAL: { type: 'arrow_shot', spawnFrame: 6, dmg: 3, kb: 0.9, scale: 0.06, speed: 8, radius: 8, frames: 18, lag: 12, stun: 3, range: 750, color: '#ffe066' },
             AIR_SIDE: { type: 'wing_flap', dmg: 12, kb: 3, scale: 0.1, angle: -30, frames: 22, lag: 18, stun: 7, color: '#fff', airKnockback: true },
             AIR_UP: { type: 'wing_rise', dmg: 11, kb: 3, scale: 0.1, angle: -90, frames: 28, lag: 18, stun: 5, color: '#ffe066', limit: true },
-            AIR_DOWN: { type: 'shockwave', dmg: 7, kb: 8.0, scale: 0, angle: -45, frames: 35, lag: 31, stun: 10, shockRadius: 160, color: '#ffe066', hover: true },
+            AIR_DOWN: { type: 'shockwave', dmg: 6, kb: 8.0, scale: 0, angle: -45, frames: 35, lag: 35, stun: 10, shockRadius: 140, color: '#ffe066', hover: true },
             LEDGE_ATK: { dmg: 7, kb: 10.0, scale: 0.01, angle: -45, frames: 30, lag: 10, stun: 10 }
         },
         throws: {
@@ -2652,7 +2670,7 @@ window.SMA.Fighter.prototype.update = function (inputKeys, opponent) {
             }
             break;
         }
-        case 'ATTACK': if (!this.isGrounded) { var moveSpd = S.SPEED * 0.5; if (this.charId === 'mage') moveSpd *= 0.9; if (this.charId === 'brawler') moveSpd *= 1.4; if (this.charId === 'spear') moveSpd *= 0.9; if (this.charId === 'hammer') moveSpd *= 0.7; if (this.charId === 'mirror') moveSpd *= 1.1; if (inputKeys.left) this.vx -= moveSpd; if (inputKeys.right) this.vx += moveSpd; if (this.vx > 5) this.vx = 5; if (this.vx < -5) this.vx = -5; } if (this.currentAttack && (this.currentAttack.type === 'meteor' || this.currentAttack.type === 'beam' || this.currentAttack.type === 'dive' || this.currentAttack.type === 'axe' || this.currentAttack.type === 'stall_fall' || this.currentAttack.type === 'up_rush' || this.currentAttack.type === 'ground_shock')) { this.handleAttackFrame(); this.applyPhysics(); } else if (this.currentAttack && (this.currentAttack.type === 'slide' || this.currentAttack.type === 'lunge' || this.currentAttack.type === 'spin_hammer' || this.currentAttack.type === 'hammer_spin_air' || this.currentAttack.type === 'tornado')) { this.handleAttackFrame(); this.vx *= 0.95; this.vy += S.GRAVITY; this.checkPlatforms(inputKeys); this.x += this.vx; this.y += this.vy; if (this.y > 2000) this.checkBounds(); } else { this.handleAttackFrame(); this.applyPhysics(); } break;
+        case 'ATTACK': if (!this.isGrounded) { var moveSpd = S.SPEED * 0.5; var cAtk = S.CHAR_DATA[this.charId] || {}; var airMoveMult = (typeof cAtk.airAttackMoveMult === 'number') ? cAtk.airAttackMoveMult : 1.0; moveSpd *= airMoveMult; if (inputKeys.left) this.vx -= moveSpd; if (inputKeys.right) this.vx += moveSpd; if (this.vx > 5) this.vx = 5; if (this.vx < -5) this.vx = -5; } if (this.currentAttack && (this.currentAttack.type === 'meteor' || this.currentAttack.type === 'beam' || this.currentAttack.type === 'dive' || this.currentAttack.type === 'axe' || this.currentAttack.type === 'stall_fall' || this.currentAttack.type === 'up_rush' || this.currentAttack.type === 'ground_shock')) { this.handleAttackFrame(); this.applyPhysics(); } else if (this.currentAttack && (this.currentAttack.type === 'slide' || this.currentAttack.type === 'lunge' || this.currentAttack.type === 'spin_hammer' || this.currentAttack.type === 'hammer_spin_air' || this.currentAttack.type === 'tornado')) { this.handleAttackFrame(); this.vx *= 0.95; this.vy += S.GRAVITY; this.checkPlatforms(inputKeys); this.x += this.vx; this.y += this.vy; if (this.y > 2000) this.checkBounds(); } else { this.handleAttackFrame(); this.applyPhysics(); } break;
         case 'CHARGE':
             if (inputKeys.left) this.facingRight = false;
             if (inputKeys.right) this.facingRight = true;
@@ -2669,11 +2687,9 @@ window.SMA.Fighter.prototype.update = function (inputKeys, opponent) {
                 }
             } else {
                 var moveSpd = S.SPEED;
-                if (this.charId === 'mage') moveSpd *= 0.9;
-                if (this.charId === 'brawler') moveSpd *= 1.4;
-                if (this.charId === 'spear') moveSpd *= 0.9;
-                if (this.charId === 'hammer') moveSpd *= 0.8;
-                if (this.charId === 'mirror') moveSpd *= 1.15;
+                var cIdle = S.CHAR_DATA[this.charId] || {};
+                var idleMoveMult = (typeof cIdle.moveMult === 'number') ? cIdle.moveMult : 1.0;
+                moveSpd *= idleMoveMult;
                 if (inputKeys.left) { this.vx -= moveSpd; this.facingRight = false; }
                 if (inputKeys.right) { this.vx += moveSpd; this.facingRight = true; }
             }
@@ -2888,7 +2904,7 @@ window.SMA.Fighter.prototype.handleAttackFrame = function () {
         if (atk.hover && !this.isGrounded) {
             this.vy = 0; this.vx *= 0.8;
         }
-        var shockFrame = 15;
+        var shockFrame = 18;
         if (this.stateTimer === shockFrame) {
             // 衝撃波ヒットフレーム：1回のみ判定
             var sr = atk.shockRadius || 200;

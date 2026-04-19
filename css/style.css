@@ -899,6 +899,72 @@ select {
     border-radius: 0 0 7px 7px;
 }
 
+.stage-preview {
+    position: absolute;
+    inset: 0;
+    display: block;
+}
+
+.preview-battlefield {
+    background:
+        radial-gradient(circle at 20% 18%, rgba(255,255,255,0.35) 0 16%, transparent 17%),
+        radial-gradient(circle at 75% 25%, rgba(255,255,255,0.22) 0 14%, transparent 15%),
+        linear-gradient(180deg, #75c7ff 0%, #9cd8ff 48%, #cfeeff 100%);
+}
+
+.preview-final {
+    background:
+        linear-gradient(180deg, #6c5ce7 0%, #7f6df0 35%, #b1a2ff 70%, #e7e1ff 100%);
+}
+
+.stage-preview .plat {
+    position: absolute;
+    border-radius: 8px;
+    background: rgba(30, 34, 52, 0.82);
+    border: 2px solid rgba(255,255,255,0.35);
+}
+
+.preview-battlefield .plat.main {
+    left: 16%;
+    width: 68%;
+    height: 12px;
+    bottom: 20px;
+}
+
+.preview-battlefield .plat.sub.s1 {
+    left: 18%;
+    width: 26%;
+    height: 9px;
+    bottom: 48px;
+}
+
+.preview-battlefield .plat.sub.s2 {
+    right: 18%;
+    width: 26%;
+    height: 9px;
+    bottom: 48px;
+}
+
+.preview-final .plat.main {
+    left: 8%;
+    width: 84%;
+    height: 12px;
+    bottom: 24px;
+    border-radius: 14px;
+    background: rgba(26, 20, 60, 0.88);
+}
+
+.preview-final .sun {
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    right: 12px;
+    top: 10px;
+    background: rgba(255, 245, 179, 0.95);
+    box-shadow: 0 0 18px rgba(255, 245, 179, 0.7);
+}
+
 /* --- キャラカード --- */
 .char-card {
     width: 85px;

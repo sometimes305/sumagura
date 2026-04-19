@@ -935,17 +935,24 @@ select {
 }
 
 .preview-battlefield .plat.sub.s1 {
-    left: 18%;
-    width: 26%;
+    left: 10%;
+    width: 22%;
     height: 9px;
-    bottom: 48px;
+    bottom: 46px;
 }
 
 .preview-battlefield .plat.sub.s2 {
-    right: 18%;
-    width: 26%;
+    right: 10%;
+    width: 22%;
     height: 9px;
-    bottom: 48px;
+    bottom: 46px;
+}
+
+.preview-battlefield .plat.sub.s3 {
+    left: 39%;
+    width: 22%;
+    height: 9px;
+    bottom: 62px;
 }
 
 .preview-final .plat.main {

@@ -389,17 +389,24 @@ canvas {
 
 /* --- タイトルロゴ（黄色いバトル風の太い文字） --- */
 .title-logo {
-    font-size: 56px;
-    font-weight: 900;
-    font-family: 'Impact', 'Noto Sans JP', sans-serif;
-    color: #ffe033;
-    letter-spacing: 8px;
-    -webkit-text-stroke: 3px #222;
+    font-size: 58px;
+    font-weight: 400;
+    font-family: 'Dela Gothic One', 'Noto Sans JP', sans-serif;
+    letter-spacing: 4px;
+    line-height: 1.04;
+    color: #fff8c9;
+    background: linear-gradient(180deg, #fffef2 0%, #fff37f 38%, #ffd400 72%, #ffc100 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 5px #23113f;
     text-shadow:
-        4px 4px 0 #c8860a,
-        6px 6px 0 rgba(0, 0, 0, 0.3);
+        0 3px 0 #f7b500,
+        0 7px 0 #a86808,
+        0 11px 14px rgba(0, 0, 0, 0.45);
     margin: 10px 0 0;
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    transform: skewX(-4deg);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
 }
 
 .title-sub {
